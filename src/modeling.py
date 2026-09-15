@@ -9,6 +9,7 @@ the likelihood, which makes AIC incomparable across different d/D).
 import itertools
 import warnings
 
+import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller
@@ -44,6 +45,11 @@ def grid_search(y: pd.Series, d: int, D: int, p_range=range(0, 3), q_range=range
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', category=FutureWarning)
         warnings.filterwarnings('ignore', category=UserWarning)
+        warnings.filterwarnings(
+            'ignore',
+            message='invalid value encountered in divide',
+            category=RuntimeWarning,
+        )
         for order in pdq:
             for seasonal_order in seasonal_pdq:
                 try:
@@ -55,11 +61,12 @@ def grid_search(y: pd.Series, d: int, D: int, p_range=range(0, 3), q_range=range
                         enforce_invertibility=False
                     )
                     res = mod.fit(disp=False)
-                    results_list.append({
-                        "order": order,
-                        "seasonal_order": seasonal_order,
-                        "AIC": res.aic
-                    })
+                    if np.isfinite(res.aic):
+                        results_list.append({
+                            "order": order,
+                            "seasonal_order": seasonal_order,
+                            "AIC": res.aic
+                        })
                 except Exception:
                     continue
 
