@@ -33,7 +33,7 @@ def determine_differencing(y: pd.Series) -> tuple[int, int, dict]:
     return d, D, diagnostics
 
 
-def grid_search(y: pd.Series, d: int, D: int, p_range=range(0, 2), q_range=range(0, 2)) -> pd.DataFrame:
+def grid_search(y: pd.Series, d: int, D: int, p_range=range(0, 3), q_range=range(0, 3)) -> pd.DataFrame:
     pdq = [(p, d, q) for p, q in itertools.product(p_range, q_range)]
     seasonal_pdq = [(P, D, Q, SEASONAL_PERIOD) for P, Q in itertools.product(p_range, q_range)]
 
