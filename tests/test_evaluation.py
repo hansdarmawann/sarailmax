@@ -179,7 +179,7 @@ class TestComputeMape:
 
     def test_compute_mape_consistent_forecast(self):
         """MAPE should be consistent with definition."""
-        y_true = pd.Series([100, 200, 300], index=pd.date_range('2020-01-01', periods=3, freq='M'))
+        y_true = pd.Series([100, 200, 300], index=pd.date_range('2020-01-01', periods=3, freq='ME'))
         y_pred = pd.Series([110, 220, 330], index=y_true.index)
 
         from unittest.mock import MagicMock
