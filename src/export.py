@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from src.config import OUTPUT_DIR, OUTPUT_PATH
+from src.config import OUTPUT_DIR, OUTPUT_PATH, relative_path
 
 
 def build_output_frame(y: pd.Series, pred, pred_ci, mape: float) -> pd.DataFrame:
@@ -31,3 +31,4 @@ def build_output_frame(y: pd.Series, pred, pred_ci, mape: float) -> pd.DataFrame
 def save_csv(df: pd.DataFrame, path=OUTPUT_PATH) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False)
+    print(f"✅ Results saved to: {relative_path(path)}")

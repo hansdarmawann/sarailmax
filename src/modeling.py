@@ -7,6 +7,7 @@ the likelihood, which makes AIC incomparable across different d/D).
 """
 
 import itertools
+import warnings
 
 import pandas as pd
 import statsmodels.api as sm
@@ -36,25 +37,31 @@ def grid_search(y: pd.Series, d: int, D: int, p_range=range(0, 2), q_range=range
     pdq = [(p, d, q) for p, q in itertools.product(p_range, q_range)]
     seasonal_pdq = [(P, D, Q, SEASONAL_PERIOD) for P, Q in itertools.product(p_range, q_range)]
 
+    y_copy = y.copy()
+    y_copy.index.freq = 'MS'
+
     results_list = []
-    for order in pdq:
-        for seasonal_order in seasonal_pdq:
-            try:
-                mod = sm.tsa.statespace.SARIMAX(
-                    y,
-                    order=order,
-                    seasonal_order=seasonal_order,
-                    enforce_stationarity=False,
-                    enforce_invertibility=False
-                )
-                res = mod.fit(disp=False)
-                results_list.append({
-                    "order": order,
-                    "seasonal_order": seasonal_order,
-                    "AIC": res.aic
-                })
-            except Exception:
-                continue
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=FutureWarning)
+        warnings.filterwarnings('ignore', category=UserWarning)
+        for order in pdq:
+            for seasonal_order in seasonal_pdq:
+                try:
+                    mod = sm.tsa.statespace.SARIMAX(
+                        y_copy,
+                        order=order,
+                        seasonal_order=seasonal_order,
+                        enforce_stationarity=False,
+                        enforce_invertibility=False
+                    )
+                    res = mod.fit(disp=False)
+                    results_list.append({
+                        "order": order,
+                        "seasonal_order": seasonal_order,
+                        "AIC": res.aic
+                    })
+                except Exception:
+                    continue
 
     aic_df = pd.DataFrame(results_list)
     return aic_df.sort_values(by="AIC", ascending=True).reset_index(drop=True)
@@ -66,11 +73,17 @@ def select_best(aic_df: pd.DataFrame) -> tuple[tuple, tuple]:
 
 
 def train_sarimax(y: pd.Series, order: tuple, seasonal_order: tuple):
-    mod = sm.tsa.statespace.SARIMAX(
-        y,
-        order=order,
-        seasonal_order=seasonal_order,
-        enforce_stationarity=False,
-        enforce_invertibility=False
-    )
-    return mod.fit(disp=False)
+    y_copy = y.copy()
+    y_copy.index.freq = 'MS'
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=FutureWarning)
+        warnings.filterwarnings('ignore', category=UserWarning)
+        mod = sm.tsa.statespace.SARIMAX(
+            y_copy,
+            order=order,
+            seasonal_order=seasonal_order,
+            enforce_stationarity=False,
+            enforce_invertibility=False
+        )
+        return mod.fit(disp=False)

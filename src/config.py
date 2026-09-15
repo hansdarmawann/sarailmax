@@ -20,3 +20,11 @@ VALIDATION_MONTHS = 12
 FORECAST_MONTHS = 12
 
 DEMO_DATA_URL = "https://synapseaisolutionsa.z13.web.core.windows.net/data/Forecast_Superstore_Sales"
+
+
+def relative_path(absolute_path: Path) -> str:
+    """Convert absolute path to relative path from PROJECT_ROOT for display."""
+    try:
+        return str(absolute_path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(absolute_path)
