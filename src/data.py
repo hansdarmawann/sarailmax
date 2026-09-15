@@ -32,7 +32,7 @@ def aggregate_monthly(df: pd.DataFrame):
     df = df.groupby('Order Date')['Sales'].sum().reset_index()
     df = df.set_index('Order Date')
 
-    y = df['Sales'].resample('MS').mean()
+    y = df['Sales'].resample('MS').sum()
     y = y.reset_index()
     y['Order Date'] = pd.to_datetime(y['Order Date'])
     y = y.set_index(['Order Date'])
