@@ -5,6 +5,4 @@ openpyxl
 statsmodels
 scikit-learn
 matplotlib
-mlflow
-setuptools
-importlib-metadata
+mlflow[extras]
