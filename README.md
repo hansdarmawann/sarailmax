@@ -44,3 +44,10 @@ sarailmax/
 - Only ~4 years of monthly data (~48 points) is available, and the model is validated with a single 12-month holdout rather than rolling-origin cross-validation, so the reported MAPE is an approximate accuracy estimate.
 - Forecasts are for total company-wide sales; there is no per-category/per-region breakdown.
 - No external regressors (holidays, promotions, macro indicators) are included.
+
+## Current Evaluation Status
+
+- The selected model remains SARIMAX `(0, 0, 0) x (0, 1, 2, 12)` with `d = 0` and `D = 1`.
+- Validation MAPE is approximately **24.52%**, so the current result does not meet the **20%** target threshold.
+- Explicitly testing `(d, D)` combinations showed that `(0, 1)` remains the preferred configuration by AIC; `(1, 1)` tied on AIC but did not provide a clear improvement.
+- Residual diagnostics do not show significant first-order autocorrelation (Ljung–Box p-value `0.46`).
