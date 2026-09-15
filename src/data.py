@@ -37,5 +37,5 @@ def aggregate_monthly(df: pd.DataFrame):
     y['Order Date'] = pd.to_datetime(y['Order Date'])
     y = y.set_index(['Order Date'])
 
-    maximim_date = y.reset_index()['Order Date'].max()
-    return y, maximim_date
+    maximum_date = y.reset_index()['Order Date'].max()
+    return y, maximum_date
