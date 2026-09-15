@@ -1,53 +1,73 @@
 # sarailmax — Superstore Sales Forecasting
 
-Monthly sales forecasting for the Superstore dataset using a SARIMAX time series model.
+Monthly sales forecasting for the Superstore dataset using a SARIMAX time-series model.
 
 ## Project Layout
 
-```
+```text
 sarailmax/
-├── notebooks/
-│   └── Superstore_Forecast_Local.ipynb   # the notebook you run
-├── src/                                   # pipeline logic used by the notebook
-│   ├── config.py       # paths & constants (experiment name, validation/forecast horizon)
-│   ├── setup.py        # create data/output/mlruns dirs, verify the data file
-│   ├── data.py         # download/load/preprocess/aggregate the Superstore data
-│   ├── modeling.py     # ADF stationarity tests, SARIMAX grid search, training
-│   ├── evaluation.py   # forecast generation, validation, MAPE
-│   ├── export.py       # build & save the actual-vs-forecast CSV
-│   └── tracking.py     # MLflow experiment tracking helpers
-├── data/raw/            # input data directory (place Superstore.xlsx here)
-├── output/              # forecast results (sales_actual_forecast.csv)
-├── mlruns/              # local MLflow experiment tracking store
+├── notebooks/superstore_forecast.ipynb  # exploratory analysis and workflow notebook
+├── src/                                 # reusable pipeline logic
+├── tests/                               # unit and integration tests
+├── .github/workflows/tests.yml          # GitHub Actions CI workflow
+├── pytest.ini                           # pytest configuration
+├── TESTING.md                           # testing guide
+├── data/                                # local input data, ignored by Git
+├── output/                              # generated results, ignored by Git
+├── mlruns/                              # local MLflow store, ignored by Git
 └── requirements.txt
 ```
+
+The main source modules are `config.py`, `setup.py`, `data.py`, `modeling.py`, `evaluation.py`, `export.py`, `pipeline.py`, and `tracking.py`.
 
 ## Setup
 
 1. Install dependencies:
-   ```
+
+   ```bash
    pip install -r requirements.txt
    ```
-2. Place `Superstore.xlsx` in `data/raw/` (the notebook will also attempt to download the demo dataset automatically if it's missing and `IS_CUSTOM_DATA = False` in `src/config.py`).
-3. Open and run `notebooks/superstore_forecast.ipynb` top to bottom. The first two cells add the repo root to `sys.path` and create the required directories, so no separate setup script is needed.
 
-## What the Notebook Does
+2. Place `Superstore.xlsx` in `data/raw/`. If it is missing, the pipeline/notebook attempts to download the demo dataset when `IS_CUSTOM_DATA = False` in `src/config.py`.
 
-1. **Load & clean** the Superstore Excel export (9,994 rows) and aggregate daily sales into a monthly series (`src/data.py`).
-2. **Exploratory analysis** — trend/seasonality visualization and decomposition (inline in the notebook).
-3. **Model selection** — ADF stationarity tests determine the differencing orders (d, D), then a grid search over the remaining SARIMAX parameters picks the lowest-AIC configuration (`src/modeling.py`).
-4. **Train & validate** the final SARIMAX model, holding out the last 12 months to compute MAPE (`src/evaluation.py`).
-5. **Export** actual + forecast values (with confidence intervals) to `output/sales_actual_forecast.csv`, and log the run (parameters, MAPE, AIC, model artifact) to MLflow under `mlruns/` (`src/export.py`, `src/tracking.py`).
+3. Run the end-to-end pipeline:
+
+   ```bash
+   python -m src.pipeline
+   ```
+
+4. Alternatively, open and run `notebooks/superstore_forecast.ipynb` from top to bottom.
+
+## Testing
+
+Run the automated unit and integration test suite with:
+
+```bash
+python -m pytest
+```
+
+Tests cover configuration, data processing, SARIMAX modeling, evaluation, export, setup, and the end-to-end pipeline. GitHub Actions runs the same test suite automatically on every push and pull request through `.github/workflows/tests.yml`.
+
+## What the Pipeline Does
+
+1. **Load and clean** the Superstore Excel export and aggregate daily sales into a monthly series (`src/data.py`).
+2. **Explore** trend and seasonality through visualizations and decomposition in the notebook.
+3. **Select a model** using ADF stationarity tests and a SARIMAX parameter grid search (`src/modeling.py`).
+4. **Train and validate** using a time-ordered holdout of the last 12 months (`src/evaluation.py`).
+5. **Export** actual and forecast values with confidence intervals to `output/sales_actual_forecast.csv`, with optional MLflow tracking under `mlruns/` (`src/export.py`, `src/tracking.py`).
 
 ## Known Limitations
 
-- Only ~4 years of monthly data (~48 points) is available, and the model is validated with a single 12-month holdout rather than rolling-origin cross-validation, so the reported MAPE is an approximate accuracy estimate.
-- Forecasts are for total company-wide sales; there is no per-category/per-region breakdown.
-- No external regressors (holidays, promotions, macro indicators) are included.
+- Only approximately four years of monthly data is available, and validation uses a single 12-month holdout rather than rolling-origin cross-validation.
+- Forecasts cover total company-wide sales; there is no per-category or per-region breakdown.
+- No external regressors such as holidays, promotions, or macro indicators are included.
+- The full test suite includes SARIMAX fitting and can take several minutes to complete.
 
 ## Current Evaluation Status
 
-- The selected model remains SARIMAX `(0, 0, 0) x (0, 1, 2, 12)` with `d = 0` and `D = 1`.
-- Validation MAPE is approximately **24.52%**, so the current result does not meet the **20%** target threshold.
-- Explicitly testing `(d, D)` combinations showed that `(0, 1)` remains the preferred configuration by AIC; `(1, 1)` tied on AIC but did not provide a clear improvement.
-- Residual diagnostics do not show significant first-order autocorrelation (Ljung–Box p-value `0.46`).
+- The selected model is SARIMAX `(0, 0, 0) x (0, 1, 2, 12)` with `d = 0` and `D = 1`.
+- Validation MAPE is approximately **24.52%**, above the **20%** target threshold.
+- Explicit testing of `(d, D)` combinations preferred `(0, 1)` by AIC; `(1, 1)` tied on AIC without a clear improvement.
+- Residual diagnostics did not show significant first-order autocorrelation (Ljung–Box p-value `0.46`).
+
+The evaluation figures above are the latest recorded results and should be refreshed when the data or modeling approach changes.
